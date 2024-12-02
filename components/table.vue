@@ -6,27 +6,25 @@
     </div>
 
     <div>
-      <div v-if="isLoading">Loading...</div>
-      <div v-else-if="error">{{ error }}</div>
-      <div v-else>
-        <UTable :rows="rows" :columns="columns">
-          <template #name-data="{ row }">
-            <span class="cursor-pointer p-4 hover:text-red-500" @click="store.openModal(row)">{{
-              row.name
-            }}</span>
-          </template>
-        </UTable>
-      </div>
+      <UTable :rows="rows" :columns="columns" :loading="isLoading">
+        <template #name-data="{ row }">
+          <span
+            class="cursor-pointer p-4 hover:text-red-500"
+            @click="store.openModal(row)"
+            >{{ row.name }}</span
+          >
+        </template>
+      </UTable>
+    </div>
 
-      <div
-        class="flex justify-end px-3 py-3.5 border-t border-gray-200 dark:border-gray-700"
-      >
-        <UPagination
-          v-model="page"
-          :page-count="pageCount"
-          :total="filteredRows.length"
-        />
-      </div>
+    <div
+      class="flex justify-end px-3 py-3.5 border-t border-gray-200 dark:border-gray-700"
+    >
+      <UPagination
+        v-model="page"
+        :page-count="pageCount"
+        :total="filteredRows.length"
+      />
     </div>
   </div>
 </template>
@@ -42,7 +40,7 @@ const error = ref(null);
 
 onMounted(async () => {
   try {
-    users.value = await getUsers(); // Foydalanuvchilarni yuklash
+    users.value = await getUsers();
   } catch (err) {
     error.value = "Foydalanuvchilarni yuklashda xatolik yuz berdi";
   } finally {
