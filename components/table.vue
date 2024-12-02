@@ -1,161 +1,81 @@
 <template>
-    <Modal v-if="store.isOpen" />
-    <div class="p-4 overflow-hidden">
-      <!-- Foydalanuvchi ismi bo‘yicha filtr -->
-      <div class="my-4">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search by name..."
-          class="border px-4 py-2 rounded w-full"
+  <Modal />
+  <div class="border-2 rounded-xl p-6">
+    <div class="flex px-3 py-3.5 border-b border-gray-200 dark:border-gray-700">
+      <UInput v-model="q" placeholder="Filter people..." />
+    </div>
+
+    <div>
+      <div v-if="isLoading">Loading...</div>
+      <div v-else-if="error">{{ error }}</div>
+      <div v-else>
+        <UTable :rows="rows" :columns="columns">
+          <template #name-data="{ row }">
+            <span class="cursor-pointer p-4 hover:text-red-500" @click="store.openModal(row)">{{
+              row.name
+            }}</span>
+          </template>
+        </UTable>
+      </div>
+
+      <div
+        class="flex justify-end px-3 py-3.5 border-t border-gray-200 dark:border-gray-700"
+      >
+        <UPagination
+          v-model="page"
+          :page-count="pageCount"
+          :total="filteredRows.length"
         />
       </div>
-  
-      <!-- Jadval -->
-      <div class="overflow-x-auto h-auto">
-        <table class="w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr >
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-              >
-                ID
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-              >
-                Name
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-              >
-                Email
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-              >
-                Phone
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-              >
-                Website
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-              >
-                Company
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-              >
-                Address
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr
-              :key="user?.id"
-              v-for="user in paginatedUsers"
-              class="hover:bg-gray-300 cursor-pointer"
-              @click="store.openModal(user)"
-            >
-              <td class="px-6 py-4 text-sm text-gray-500">{{ user?.id }}</td>
-              <td class="px-6 py-4 text-sm text-gray-900">{{ user?.name }}</td>
-              <td class="px-6 py-4 text-sm text-gray-500">{{ user?.email }}</td>
-              <td class="px-6 py-4 text-sm text-gray-500">{{ user?.phone }}</td>
-              <td class="px-6 py-4 text-sm text-blue-500">
-                <a :href="`http://${user?.website}`" target="_blank">{{
-                  user?.website
-                }}</a>
-              </td>
-              <td class="px-6 py-4 text-sm text-gray-500">
-                {{ user?.company.name }}
-              </td>
-              <td class="px-6 py-4 text-sm text-gray-500">
-                {{ user?.address.street }}, {{ user?.address.suite }},
-                {{ user?.address.city }}, {{ user?.address.zipcode }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-  
-      <div class="flex justify-center mt-4">
-        <button
-          @click="prevPage"
-          :disabled="currentPage === 1"
-          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-l"
-        >
-          Previous
-        </button>
-        <span class="px-4 py-2 bg-gray-100 text-gray-700">
-          Page {{ currentPage }} of {{ totalPages }}
-        </span>
-        <button
-          @click="nextPage"
-          :disabled="currentPage === totalPages"
-          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r"
-        >
-          Next
-        </button>
-      </div>
     </div>
-  </template>
-  
-  <script setup>
-  import { getUsers } from "@/services/userService";
-  import { useStore } from "~/store/index";
-  const store = useStore();
-  
-  const users = ref([]);
-  const isLoading = ref(true);
-  const error = ref(null);
-  
-  onMounted(async () => {
-    try {
-      users.value = await getUsers();
-    } catch (err) {
-      error.value = "Foydalanuvchilarni yuklashda xatolik yuz berdi";
-    } finally {
-      isLoading.value = false;
-    }
-  });
-  
-  const searchQuery = ref("");
-  
-  const currentPage = ref(1);
-  const itemsPerPage = 5;
-  
-  const filteredUsers = computed(() => {
-    if (!searchQuery.value) {
-      return users.value;
-    }
-    return users.value.filter((user) =>
-      user.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+  </div>
+</template>
+
+<script setup>
+import { useStore } from "~/store/index";
+const store = useStore();
+import { ref, computed } from "vue";
+import { getUsers } from "@/services/userService";
+const users = ref([]);
+const isLoading = ref(true);
+const error = ref(null);
+
+onMounted(async () => {
+  try {
+    users.value = await getUsers(); // Foydalanuvchilarni yuklash
+  } catch (err) {
+    error.value = "Foydalanuvchilarni yuklashda xatolik yuz berdi";
+  } finally {
+    isLoading.value = false;
+  }
+});
+
+// Tabel ustunlari
+const columns = [
+  { key: "id", label: "ID" },
+  { key: "name", label: "Name" },
+];
+
+// Foydalanuvchilarni filtrlash
+const q = ref("");
+const filteredRows = computed(() => {
+  if (!q.value) {
+    return users.value;
+  }
+
+  return users.value.filter((user) => {
+    return Object.values(user).some((value) =>
+      String(value).toLowerCase().includes(q.value.toLowerCase())
     );
   });
-  
-  const totalPages = computed(() =>
-    Math.ceil(filteredUsers.value.length / itemsPerPage)
-  );
-  
-  const paginatedUsers = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return filteredUsers.value.slice(start, end);
-  });
-  
-  const nextPage = () => {
-    if (currentPage.value < totalPages.value) {
-      currentPage.value++;
-    }
-  };
-  
-  const prevPage = () => {
-    if (currentPage.value > 1) {
-      currentPage.value--;
-    }
-  };
-  </script>
-  
+});
+
+// Pagination
+const page = ref(1);
+const pageCount = 5;
+const rows = computed(() => {
+  const start = (page.value - 1) * pageCount;
+  const end = page.value * pageCount;
+  return filteredRows.value.slice(start, end);
+});
+</script>

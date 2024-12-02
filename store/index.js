@@ -15,7 +15,6 @@ export const useStore = defineStore("store", {
     },
     closeModal() {
       this.isOpen = false;
-      this.selectedItem = [];
     },
   },
 });

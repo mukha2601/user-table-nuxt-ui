@@ -1,16 +1,12 @@
 <script setup>
 import { useStore } from "~/store/index";
-
 const store = useStore();
 </script>
 
 <template>
   <div class="relative">
     <UModal v-model="store.isOpen">
-      <div class="flex justify-end p-2">
-        <UButton label="close" @click="store.closeModal" />
-      </div>
-      <div class="p-4">
+      <div class="p-4 flex flex-col gap-4">
         <p>
           <span class="font-extralight text-gray-300">Name: </span>
           {{ store.selectedItem.name }}
@@ -31,6 +27,9 @@ const store = useStore();
           <span class="font-extralight text-gray-300">Company: </span>
           {{ store.selectedItem.company.name }}
         </p>
+        <div class="">
+          <UButton label="close" @click="store.closeModal" />
+        </div>
       </div>
     </UModal>
   </div>
